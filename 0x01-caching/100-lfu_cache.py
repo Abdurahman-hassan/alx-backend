@@ -1,58 +1,51 @@
 #!/usr/bin/python3
-""" 100-lfu_cache """
+""" LFUCache """
 
-from base_caching import BaseCaching
+BaseCaching = __import__('base_caching').BaseCaching
 
 
 class LFUCache(BaseCaching):
-    """ LFUCache defines:
-      - Caching system
-    """
+    """ LFUCache Class """
 
     def __init__(self):
-        """ Initiliaze
-        """
+        """ constructor """
         super().__init__()
-        self.queue = []
-        self.count = {}
+        self.lfu_order = []
+        self.frequency = {}
 
     def put(self, key, item):
-        """ Add an item in the cache
         """
-        if key and item:
+        assign to the dictionary self.cache_data
+        the item value for the key key
+        """
+        if key is not None and item is not None:
             if key in self.cache_data:
                 self.cache_data[key] = item
-                self.count[key] += 1
+                self.frequency[key] += 1
+                self.lfu_order.remove(key)
             else:
-                if len(self.cache_data) >= BaseCaching.MAX_ITEMS:
-                    min_count = min(self.count.values())
-                    keys = [k for k in self.count if self.count[k] == min_count]
-                    for k in self.queue:
-                        if k in keys:
+                if len(self.cache_data) >= self.MAX_ITEMS:
+                    min_value = min(self.frequency.values())
+                    min_keys = [k for k in self.frequency
+                                if self.frequency[k] == min_value]
+                    for i in range(len(self.lfu_order)):
+                        if self.lfu_order[i] in min_keys:
                             break
-                    self.queue.remove(k)
-                    del self.cache_data[k]
-                    del self.count[k]
-                    print("DISCARD: {}".format(k))
+                    del self.cache_data[self.lfu_order[i]]
+                    del self.frequency[self.lfu_order[i]]
+                    print("DISCARD:", self.lfu_order[i])
+                    self.lfu_order.pop(i)
                 self.cache_data[key] = item
-                self.count[key] = 1
-            if key in self.queue:
-                self.queue.remove(key)
-            self.queue.append(key)
+                self.frequency[key] = 1
+            self.lfu_order.append(key)
 
     def get(self, key):
-        """ Get an item by key
+        """
+        return the value of key in self.cache_data
         """
         if key in self.cache_data:
-            self.count[key] += 1
-            if key in self.queue:
-                self.queue.remove(key)
-            self.queue.append(key)
+            self.lfu_order.remove(key)
+            self.lfu_order.append(key)
+            self.frequency[key] += 1
             return self.cache_data[key]
         return None
-
-    def print_cache(self):
-        """ Print the cache
-        """
-        for k in self.cache_data:
-            print("{}: {}".format(k, self.cache_data[k]))
